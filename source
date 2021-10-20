@@ -5,7 +5,8 @@ using namespace std;
 int const height = 17;
 int const width = 40;
 int const max_tail_length = 30;
-//bool alive = 1;
+int score = 0;
+bool alive = 1;
 #define KEY_UP 119
 #define KEY_DOWN 115
 #define KEY_RIGHT 100
@@ -89,6 +90,7 @@ public:
 	// добавляет сегмент или рисует хвост
 	void tail_follow() {
 		if (mp->space[y][x] == 'A') {
+			score++;
 			if (tail_length < max_tail_length-1) {
 				tail_length++;
 				for (int i = tail_length - 1; i > 0; i--) {
@@ -143,9 +145,7 @@ public:
 		// Голова попала в хвост
 		for (int i = 0; i < tail_length; i++) {
 			if (x == tailx[i] && y == taily[i]) {
-				system("CLS");
-				cout << "GAME OVER" << endl;
-				system("PAUSE");
+				alive = 0;
 			}
 		}
 		// Голова попала в стену
@@ -189,10 +189,12 @@ int main() {
 	HANDLE hnd = GetStdHandle(STD_OUTPUT_HANDLE);
 	map map1 = map(hnd);
 	snake snakie(&map1);
-	while (1 == 1) {
+	int exit = 0;
+	while (exit != 27 && alive == 1) {
 		map1.clean();
 		if (_kbhit()) {
 			int get_key = _getch();
+			exit = get_key;
 			switch (get_key) {
 			case KEY_UP:
 				if (snakie.dir_buff == DOWN) {
@@ -240,8 +242,12 @@ int main() {
 		map1.set_apple();
 		map1.drawpicture();
 		//system ("PAUSE");
+		cout << "Your score " << score << '\0';
 		Sleep(100);
 	}
+	system("CLS");
+	cout << "Game Over!" << endl;
+	cout << "Your score " << score << "\0";
 	return 0;
 }
 void set_cursot(HANDLE hdl) {
