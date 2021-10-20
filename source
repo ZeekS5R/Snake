@@ -1,0 +1,210 @@
+#include<iostream>
+#include<conio.h>
+#include<Windows.h>
+using namespace std;
+int const height = 15;
+int const width = 30;
+int const max_tail_length = 20;
+//bool alive = 1;
+#define KEY_UP 119
+#define KEY_DOWN 115
+#define KEY_RIGHT 100
+#define KEY_LEFT 97
+enum direction {UP, DOWN, RIGHT, LEFT};
+void set_cursot(HANDLE);
+class map {
+	HANDLE hnd;
+public:
+	char space[height+1][width+1];
+	map(HANDLE hnd) : hnd(hnd) {}
+	void clean();
+	void drawpicture();
+};
+
+//renews map and puts apples in random points at the map. // добавить отдельный массив для яблока
+void map::clean() { 
+	for (int i = 0; i < height; i++) {//set map walls
+		for (int j = 0; j < width; j++) {
+			if (i == 0 || i == height - 1) {
+				space[i][j] = '%';
+			}
+			else {
+				if (j == 0 || j == width-1) {
+					space[i][j] = '%';
+				}
+				else {
+					space[i][j] = ' ';
+				}
+			}
+		}
+	}
+	space[5][10] = '$';
+}
+
+//draw snake on map
+void map::drawpicture(){
+	set_cursot(hnd);
+	space[height][width] = '\0';
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			cout << space[i][j];
+		}
+		cout << endl;
+	}
+}
+
+
+class snake {
+	int dx, dy;
+	int x, y;
+	int bufx, bufy;
+	int tail_length;
+	map *mp;
+	int tailx[max_tail_length] = { 5,5,5,5,5};
+	int taily[max_tail_length] = {6,7,8,9,10};
+public:
+	direction dir;
+	direction dir_buff;
+    snake(map *Mp) {
+		mp = Mp;
+		set_options(5, 5, RIGHT, 5);
+	}
+	void set_options(int xs, int ys, direction dir, int tail_length) {
+		x = xs;
+		y = ys;
+		this->dir = dir;
+		this->tail_length = tail_length;
+		dir_buff = dir;
+	}
+	void tail_follow() {
+		if (x == 10 && y == 5) {
+			tail_length++;
+			for (int i = tail_length - 1; i > 0; i--) {
+				tailx[i] = tailx[i-1];
+				taily[i] = taily[i-1];
+			}
+			tailx[0] = bufx;
+			taily[0] = bufy;
+		}
+		else {
+			for (int i = tail_length; i >0; i--) {
+				tailx[i] = tailx[i - 1];
+				taily[i] = taily[i - 1];
+			}
+			tailx[0] = bufx;
+			taily[0] = bufy;
+		}
+	}
+	void Put_head_on_Map() {
+		// Голова попала в хвост
+		for (int i = 0; i < tail_length; i++) {
+			if (x == tailx[i] && y == taily[i]) {
+				system("CLS");
+				cout << "GAME OVER" << endl;
+				system("PAUSE");
+			}
+		}
+		// Голова попала в стену
+		if (mp->space[y][x] == '%') {
+	        system("CLS");
+	        cout << "GAME OVER" << endl;
+	        system("PAUSE");
+		}
+		// Передать голову в массив класса map
+		mp->space[y][x] = '@';
+	}
+	void Put_tail_on_Map() {
+		for (int i = 0; i < tail_length; i++) {
+			mp->space[taily[i]][tailx[i]]='+';
+		}
+	}
+	void move(direction dir);
+}; 
+
+int main() {
+	srand(time(0));
+	HANDLE hnd = GetStdHandle(STD_OUTPUT_HANDLE);
+	map map1 = map(hnd);
+	snake snakie(&map1);
+while (1 == 1) {
+	map1.clean();
+		if (_kbhit()) {
+			int get_key = _getch();
+			switch (get_key) {
+			case KEY_UP:
+				if (snakie.dir_buff == DOWN) {
+					snakie.dir = DOWN;
+				}
+				else {
+					snakie.dir = UP;
+					snakie.dir_buff = UP;
+				}
+				break;
+			case KEY_DOWN:
+				if (snakie.dir_buff == UP) {
+					snakie.dir = UP;
+				}
+				else {
+					snakie.dir = DOWN;
+					snakie.dir_buff = DOWN;
+				}
+				break;
+			case KEY_RIGHT:
+				if (snakie.dir_buff == LEFT) {
+					snakie.dir = LEFT;
+				}
+				else {
+					snakie.dir = RIGHT;
+					snakie.dir_buff = RIGHT;
+				}
+				break;
+			case KEY_LEFT:
+				if (snakie.dir_buff == RIGHT) {
+					snakie.dir = RIGHT;
+				}
+				else {
+					snakie.dir = LEFT;
+					snakie.dir_buff = LEFT;
+				}
+				break;
+			}
+		}
+		snakie.move(snakie.dir);
+		snakie.tail_follow();
+		snakie.Put_head_on_Map();
+		snakie.Put_tail_on_Map();
+		map1.drawpicture();
+		//system ("PAUSE");
+		Sleep(100);
+	}
+	return 0;
+}
+
+void snake::move(direction dir){
+	bufx = x;
+	bufy = y; //задает текущее положение головы змеи, прежде чем изменить его
+	switch (dir) {
+	case UP:
+		dx = 0;
+		dy = -1;
+		break;
+	case DOWN:
+		dx = 0;
+		dy = 1;
+		break;
+	case RIGHT:
+		dx = 1;
+		dy = 0;
+		break;
+	case LEFT:
+			dx = -1;
+			dy = 0;
+		break;
+		}
+		x = x + dx;
+		y = y + dy;
+	}
+
+void set_cursot(HANDLE hdl) {
+	SetConsoleCursorPosition(hdl, { 0,0 });
+}
