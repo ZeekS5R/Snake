@@ -2,8 +2,8 @@
 #include<conio.h>
 #include<Windows.h>
 using namespace std;
-int const height = 15;
-int const width = 30;
+int const height = 17;
+int const width = 40;
 int const max_tail_length = 20;
 //bool alive = 1;
 #define KEY_UP 119
@@ -14,11 +14,20 @@ enum direction {UP, DOWN, RIGHT, LEFT};
 void set_cursot(HANDLE);
 class map {
 	HANDLE hnd;
+	int apple_x = 10, apple_y = 5;
 public:
 	char space[height+1][width+1];
 	map(HANDLE hnd) : hnd(hnd) {}
 	void clean();
 	void drawpicture();
+	void set_apple() {
+		if (space[apple_y][apple_x] == '@') {
+		do {
+			apple_y = rand() % (height-2)+1;
+			apple_x = rand() % (width-2)+1;
+		} while (space[apple_y][apple_x] == '+' || space[apple_y][apple_x] == '@');
+		}
+	}
 };
 
 //renews map and puts apples in random points at the map. // добавить отдельный массив для яблока
@@ -38,7 +47,7 @@ void map::clean() {
 			}
 		}
 	}
-	space[5][10] = '$';
+	space[apple_y][apple_x] = 'A';
 }
 
 //draw snake on map
@@ -56,19 +65,20 @@ void map::drawpicture(){
 
 class snake {
 	int dx, dy;
-	int x, y;
 	int bufx, bufy;
 	int tail_length;
 	map *mp;
 	int tailx[max_tail_length] = { 5,5,5,5,5};
 	int taily[max_tail_length] = {6,7,8,9,10};
 public:
+	int x, y;
 	direction dir;
 	direction dir_buff;
     snake(map *Mp) {
 		mp = Mp;
 		set_options(5, 5, RIGHT, 5);
 	}
+	// задает начальную позицию
 	void set_options(int xs, int ys, direction dir, int tail_length) {
 		x = xs;
 		y = ys;
@@ -76,8 +86,9 @@ public:
 		this->tail_length = tail_length;
 		dir_buff = dir;
 	}
+	// добавляет сегмент или рисует хвост
 	void tail_follow() {
-		if (x == 10 && y == 5) {
+		if (mp->space[y][x]=='A') {
 			tail_length++;
 			for (int i = tail_length - 1; i > 0; i--) {
 				tailx[i] = tailx[i-1];
@@ -118,7 +129,30 @@ public:
 			mp->space[taily[i]][tailx[i]]='+';
 		}
 	}
-	void move(direction dir);
+	void move(direction dir) {
+		bufx = x;
+		bufy = y; //задает текущее положение головы змеи, прежде чем изменить его
+		switch (dir) {
+		case UP:
+			dx = 0;
+			dy = -1;
+			break;
+		case DOWN:
+			dx = 0;
+			dy = 1;
+			break;
+		case RIGHT:
+			dx = 1;
+			dy = 0;
+			break;
+		case LEFT:
+			dx = -1;
+			dy = 0;
+			break;
+		}
+		x = x + dx;
+		y = y + dy;
+	}
 }; 
 
 int main() {
@@ -173,38 +207,13 @@ while (1 == 1) {
 		snakie.tail_follow();
 		snakie.Put_head_on_Map();
 		snakie.Put_tail_on_Map();
+		map1.set_apple();
 		map1.drawpicture();
 		//system ("PAUSE");
 		Sleep(100);
 	}
 	return 0;
 }
-
-void snake::move(direction dir){
-	bufx = x;
-	bufy = y; //задает текущее положение головы змеи, прежде чем изменить его
-	switch (dir) {
-	case UP:
-		dx = 0;
-		dy = -1;
-		break;
-	case DOWN:
-		dx = 0;
-		dy = 1;
-		break;
-	case RIGHT:
-		dx = 1;
-		dy = 0;
-		break;
-	case LEFT:
-			dx = -1;
-			dy = 0;
-		break;
-		}
-		x = x + dx;
-		y = y + dy;
-	}
-
 void set_cursot(HANDLE hdl) {
 	SetConsoleCursorPosition(hdl, { 0,0 });
 }
