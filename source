@@ -4,41 +4,41 @@
 using namespace std;
 int const height = 17;
 int const width = 40;
-int const max_tail_length = 20;
+int const max_tail_length = 30;
 //bool alive = 1;
 #define KEY_UP 119
 #define KEY_DOWN 115
 #define KEY_RIGHT 100
 #define KEY_LEFT 97
-enum direction {UP, DOWN, RIGHT, LEFT};
+enum direction { UP, DOWN, RIGHT, LEFT };
 void set_cursot(HANDLE);
 class map {
 	HANDLE hnd;
 	int apple_x = 10, apple_y = 5;
 public:
-	char space[height+1][width+1];
+	char space[height + 1][width + 1];
 	map(HANDLE hnd) : hnd(hnd) {}
 	void clean();
 	void drawpicture();
 	void set_apple() {
 		if (space[apple_y][apple_x] == '@') {
-		do {
-			apple_y = rand() % (height-2)+1;
-			apple_x = rand() % (width-2)+1;
-		} while (space[apple_y][apple_x] == '+' || space[apple_y][apple_x] == '@');
+			do {
+				apple_y = rand() % (height - 2) + 1;
+				apple_x = rand() % (width - 2) + 1;
+			} while (space[apple_y][apple_x] == '+' || space[apple_y][apple_x] == '@');
 		}
 	}
 };
 
 //renews map and puts apples in random points at the map. // добавить отдельный массив для яблока
-void map::clean() { 
+void map::clean() {
 	for (int i = 0; i < height; i++) {//set map walls
 		for (int j = 0; j < width; j++) {
 			if (i == 0 || i == height - 1) {
 				space[i][j] = '%';
 			}
 			else {
-				if (j == 0 || j == width-1) {
+				if (j == 0 || j == width - 1) {
 					space[i][j] = '%';
 				}
 				else {
@@ -51,7 +51,7 @@ void map::clean() {
 }
 
 //draw snake on map
-void map::drawpicture(){
+void map::drawpicture() {
 	set_cursot(hnd);
 	space[height][width] = '\0';
 	for (int i = 0; i < height; i++) {
@@ -64,17 +64,17 @@ void map::drawpicture(){
 
 
 class snake {
+	int x, y;
 	int dx, dy;
 	int bufx, bufy;
 	int tail_length;
-	map *mp;
-	int tailx[max_tail_length] = { 5,5,5,5,5};
-	int taily[max_tail_length] = {6,7,8,9,10};
+	map* mp;
+	int tailx[max_tail_length] = { 5,5,5,5,5 };
+	int taily[max_tail_length] = { 6,7,8,9,10 };
 public:
-	int x, y;
 	direction dir;
 	direction dir_buff;
-    snake(map *Mp) {
+	snake(map* Mp) {
 		mp = Mp;
 		set_options(5, 5, RIGHT, 5);
 	}
@@ -88,22 +88,55 @@ public:
 	}
 	// добавляет сегмент или рисует хвост
 	void tail_follow() {
-		if (mp->space[y][x]=='A') {
-			tail_length++;
-			for (int i = tail_length - 1; i > 0; i--) {
-				tailx[i] = tailx[i-1];
-				taily[i] = taily[i-1];
+		if (mp->space[y][x] == 'A') {
+			if (tail_length < max_tail_length-1) {
+				tail_length++;
+				for (int i = tail_length - 1; i > 0; i--) {
+					tailx[i] = tailx[i - 1];
+					taily[i] = taily[i - 1];
+				}
+				tailx[0] = bufx;
+				taily[0] = bufy;
 			}
-			tailx[0] = bufx;
-			taily[0] = bufy;
+			else {
+				for (int i = tail_length; i > 0; i--) {
+					tailx[i] = tailx[i - 1];
+					taily[i] = taily[i - 1];
+				}
+				tailx[0] = bufx;
+				taily[0] = bufy;
+			}
 		}
 		else {
-			for (int i = tail_length; i >0; i--) {
+			for (int i = tail_length; i > 0; i--) {
 				tailx[i] = tailx[i - 1];
 				taily[i] = taily[i - 1];
 			}
 			tailx[0] = bufx;
 			taily[0] = bufy;
+		}
+	}
+	// Проход змеи через стены
+	void control() {
+		if (mp->space[y][x] == '%') {
+			switch (dir) {
+			case DOWN:
+				x = x;
+				y = 1;
+				break;
+			case UP:
+				x = x;
+				y = height - 2;
+				break;
+			case RIGHT:
+				x = 1;
+				y = y;
+				break;
+			case LEFT:
+				x = width - 2;
+				y = y;
+				break;
+			}
 		}
 	}
 	void Put_head_on_Map() {
@@ -116,17 +149,13 @@ public:
 			}
 		}
 		// Голова попала в стену
-		if (mp->space[y][x] == '%') {
-	        system("CLS");
-	        cout << "GAME OVER" << endl;
-	        system("PAUSE");
-		}
+///////////
 		// Передать голову в массив класса map
 		mp->space[y][x] = '@';
 	}
 	void Put_tail_on_Map() {
 		for (int i = 0; i < tail_length; i++) {
-			mp->space[taily[i]][tailx[i]]='+';
+			mp->space[taily[i]][tailx[i]] = '+';
 		}
 	}
 	void move(direction dir) {
@@ -153,15 +182,15 @@ public:
 		x = x + dx;
 		y = y + dy;
 	}
-}; 
+};
 
 int main() {
 	srand(time(0));
 	HANDLE hnd = GetStdHandle(STD_OUTPUT_HANDLE);
 	map map1 = map(hnd);
 	snake snakie(&map1);
-while (1 == 1) {
-	map1.clean();
+	while (1 == 1) {
+		map1.clean();
 		if (_kbhit()) {
 			int get_key = _getch();
 			switch (get_key) {
@@ -204,6 +233,7 @@ while (1 == 1) {
 			}
 		}
 		snakie.move(snakie.dir);
+		snakie.control();
 		snakie.tail_follow();
 		snakie.Put_head_on_Map();
 		snakie.Put_tail_on_Map();
